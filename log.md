@@ -15,3 +15,5 @@ Trying to convert to linear16 with ffmpeg. Apt-get ffmpeg installation failed so
 https://delog.wordpress.com/2011/11/04/convert-wav-to-pcm-using-ffmpeg/
 
 http://www.audioexpert.com/register.php, ericbolo, CaoeChloe123 (or thehumbling123)
+
+Latest test: python transcribe.py -f again.wav -a notefree-20eeaca71278.json

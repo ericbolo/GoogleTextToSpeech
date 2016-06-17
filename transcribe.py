@@ -90,28 +90,55 @@ class Google(object):
             'b_leg': right,
         }
 
-    DISCOVERY_URL = ('https://{api}.googleapis.com/$discovery/rest?'
-                     'version={apiVersion}')
+
 
 
     def get_speech_service():
-        credentials = GoogleCredentials.get_application_default().create_scoped(
-            ['https://www.googleapis.com/auth/cloud-platform'])
+
+        print "inside get_speech_service"
+
+        credentials = GoogleCredentials.get_application_default().create_scoped(['https://www.googleapis.com/auth/cloud-platform'])
+
         http = httplib2.Http()
+
         credentials.authorize(http)
+
+        print "right before returning"
 
         return discovery.build(
             'speech', 'v1', http=http, discoveryServiceUrl=DISCOVERY_URL)
 
 
+    #exception thrown somewhere here
     def upload_audio(self, speech, sample_rate):
+
+        print "Uploading audio"
         credentials = GoogleCredentials.get_application_default().create_scoped([SERVICE_URL])
 
-        with open(self.discovery_file, 'r') as f:
-            doc = f.read()
+        print "got creds"
 
         speech_content = base64.b64encode(speech)
-        service = get_speech_service()
+
+        print "base64-encoded speech"
+
+        #service = get_speech_service()
+
+        print "inside get_speech_service"
+
+        credentials = GoogleCredentials.get_application_default().create_scoped(['https://www.googleapis.com/auth/cloud-platform'])
+
+        http = httplib2.Http()
+
+        credentials.authorize(http)
+
+        print "right before returning"
+
+        DISCOVERY_URL = ('https://{api}.googleapis.com/$discovery/rest?'
+                             'version={apiVersion}')
+
+        service = discovery.build(
+            'speech', 'v1', http=http, discoveryServiceUrl=DISCOVERY_URL)
+
         service_request = service.speech().recognize(
             body={
                 'initialRequest': {
@@ -122,6 +149,7 @@ class Google(object):
                     'content': speech_content.decode('UTF-8')
                     }
                 })
+        print "requested"
         response = service_request.execute()
         return json.dumps(response)
 
@@ -132,6 +160,7 @@ class Google(object):
             r = self.upload_audio(raw_audio_data, kwargs['sample_rate'])
             raw_audio_data = ""
         except Exception, e:
+            print e
             return "%UPLOADFAILED"
 
         try:
