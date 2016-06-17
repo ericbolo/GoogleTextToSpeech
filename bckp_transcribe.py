@@ -90,20 +90,6 @@ class Google(object):
             'b_leg': right,
         }
 
-    DISCOVERY_URL = ('https://{api}.googleapis.com/$discovery/rest?'
-                     'version={apiVersion}')
-
-
-    def get_speech_service():
-        credentials = GoogleCredentials.get_application_default().create_scoped(
-            ['https://www.googleapis.com/auth/cloud-platform'])
-        http = httplib2.Http()
-        credentials.authorize(http)
-
-        return discovery.build(
-            'speech', 'v1', http=http, discoveryServiceUrl=DISCOVERY_URL)
-
-
     def upload_audio(self, speech, sample_rate):
         credentials = GoogleCredentials.get_application_default().create_scoped([SERVICE_URL])
 
@@ -111,7 +97,7 @@ class Google(object):
             doc = f.read()
 
         speech_content = base64.b64encode(speech)
-        service = get_speech_service()
+        service = discovery.build_from_document(doc, credentials=credentials, http=httplib2.Http())
         service_request = service.speech().recognize(
             body={
                 'initialRequest': {
@@ -287,8 +273,17 @@ if __name__ == "__main__":
             print "Looking for speech_service_account.json in {0}".format(working_directory)
         args.application_credentials_file = os.path.join(working_directory, "speech_service_account.json")
 
+    if not args.api_discovery_file:
+        if not args.quiet:
+            print "Looking for speech-discovery_google_rest_v1.json in {0}".format(working_directory)
+        args.api_discovery_file = os.path.join(working_directory, 'speech-discovery_google_rest_v1.json')
+
     if not os.path.exists(args.application_credentials_file):
         print "Path to credentials file is invalid"
+        sys.exit(1)
+
+    if not os.path.exists(args.api_discovery_file):
+        print "Path to discovery file is invalid"
         sys.exit(1)
 
     if not os.path.exists(args.file):
@@ -301,7 +296,7 @@ if __name__ == "__main__":
     if not args.quiet:
         print "Processing {0}: Channels - {1}, Threads: {2}, Rate: 1 request every {3} seconds".format(args.file, args.channels_to_process, args.threads, quota)
 
-    google = Google("",
+    google = Google(args.api_discovery_file,
                     max_threads=args.threads,
                     quota=quota,
                     max_continuous_silence=args.max_continuous_silence,
